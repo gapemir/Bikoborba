@@ -6,34 +6,32 @@ void quit(bool &running) {
     running = false;
 }
 
-Bullet::Bullet(int xb, int yb, int dire) {
+Bullet::Bullet(int xb, int yb, int dire, int orig) {
     r.x = xb;
     r.y = yb;
     dir = dire;
     r.h = 8;
     r.w = 32;
     next = nullptr;
+    origin = orig;
 }
 
 BulletList::BulletList(SDL_Renderer *rend) {
     head = nullptr;
-    Btexture = IMG_LoadTexture(rend, "media/bullet.png");
+    texture = IMG_LoadTexture(rend, "media/bullet.png");
 }
-void BulletList::push(int xb, int yb, int dire) {
-    Bullet *newB = new Bullet(xb, yb, dire);
+void BulletList::push(int xb, int yb, int dire, int orig) {
+    Bullet *newB = new Bullet(xb, yb, dire, orig);
     newB->next = head;
     head = newB;
 };
 void BulletList::display(SDL_Renderer *rend) {
     int di[] = {270, 90, 0, 180, 315, 225, 45, 135};
     Bullet *tmp = head;
-    std::cout << "\ns\n";
     while (tmp != nullptr) {
-        std::cout << tmp->getDir() << " ";
         SDL_Rect t = SDL_RectMy(tmp->r.x, tmp->r.y, tmp->r.w * SCALE / 2, tmp->r.h * SCALE);
-        SDL_RenderCopyEx(rend, Btexture, NULL, &t, di[tmp->getDir()], NULL, SDL_FLIP_NONE);
+        SDL_RenderCopyEx(rend, texture, NULL, &t, di[tmp->getDir()], NULL, SDL_FLIP_NONE);
         tmp = tmp->next;
-        // std::cout<<"1 ";
     }
 }
 void BulletList::update() {
@@ -67,7 +65,7 @@ void BulletList::chk() {
     Bullet *c = head, *p = nullptr;
     while (c != nullptr) {
         if (c->r.x < 0 || c->r.x > WIDTH || c->r.y < 0 || c->r.y > HEIGHT) {
-            p == nullptr ? (c->next == nullptr ? head = nullptr : head = c->next) : p->next = c->next;
+            p == nullptr ? head = c->next : p->next = c->next;
             delete c;
             p == nullptr ? c = head : c = p;
         }

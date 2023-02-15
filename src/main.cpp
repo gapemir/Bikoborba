@@ -1,7 +1,6 @@
-//#include "function.cpp"
-#include "Keyboard.cpp"
-//#include <SDL2/SDL.h>
-#include <My.h>
+#include "keyboard.cpp"
+#include "My.h"
+#include <chrono>
 #include <ctime>
 #include <iostream>
 
@@ -33,6 +32,11 @@ int main(int argc, char *argv[]) {
         SDL_Quit();
         return 0;
     }
+
+    std::chrono::steady_clock::time_point start = std::chrono::high_resolution_clock::now(), stop = start;
+    std::chrono::microseconds microseconds = std::chrono::duration_cast<std::chrono::microseconds>(stop - start);
+    double dt;
+
     SDL_GetWindowSize(wind, &WIDTH, &HEIGHT);
     TTF_Init();
     SDL_Surface *image;
@@ -55,19 +59,23 @@ int main(int argc, char *argv[]) {
     Keyb k;
 
     while (running) {
+        dt = microseconds.count() * 0.000001;
         /* Process events */
         while (SDL_PollEvent(&event))
             event.type == SDL_QUIT ? quit(running) : k.update(event);
 
         if (k.get(SDL_SCANCODE_ESCAPE)) running = false;
         if (k.get(SDL_SCANCODE_W) || k.get(SDL_SCANCODE_S) || k.get(SDL_SCANCODE_D) || k.get(SDL_SCANCODE_A)) mino.move(k, MSPEED);
-        if (k.get(SDL_SCANCODE_SPACE)) mino.shoot();
+        if (k.get(SDL_SCANCODE_SPACE)) mino.shoot(bullets);
         if (k.get(SDL_SCANCODE_KP_1)) fighters.push(rand() % WIDTH, rand() % HEIGHT);
         if (k.get(SDL_SCANCODE_KP_2)) arenas.push(rand() % WIDTH, rand() % HEIGHT);
 
-        fighters.update();
-        fighters.chk(mino);
+        fighters.update(bullets);
+        fighters.chk(bullets, mino);
+        bullets.update();
+        bullets.chk();
         arenas.chk(mino);
+        mino.chk(bullets);
 
         if (!mino.getHealth())
             menu = 1;
@@ -80,6 +88,7 @@ int main(int argc, char *argv[]) {
             SDL_RenderCopy(rend, floor, NULL, NULL);
             arenas.display(rend);
             fighters.display(rend);
+            bullets.display(rend);
             mino.display(rend);
         } else {
             if (!menuSc.getDis())
@@ -91,6 +100,9 @@ int main(int argc, char *argv[]) {
         }
         SDL_RenderPresent(rend);
         SDL_Delay(1000 / FPS);
+        start = std::chrono::high_resolution_clock::now();
+        microseconds = std::chrono::duration_cast<std::chrono::microseconds>(start - stop);
+        stop = start;
     }
     /* Release resources */
     SDL_DestroyRenderer(rend);

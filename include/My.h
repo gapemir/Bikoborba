@@ -18,22 +18,23 @@
 extern int WIDTH, HEIGHT;
 
 class Bullet {
+    int origin; // 0=mino, 1=fighter
     int dir;
 
 public:
     SDL_Rect r;
     Bullet *next;
+    int getOrigin() { return origin; }
     int getDir() { return dir; }
-    Bullet(int, int, int);
+    Bullet(int, int, int, int);
 };
 class BulletList {
     Bullet *head;
-    SDL_Texture *Btexture;
+    SDL_Texture *texture;
 
 public:
-    BulletList() {}
     BulletList(SDL_Renderer *);
-    void push(int, int, int);
+    void push(int, int, int, int);
     void display(SDL_Renderer *);
     void update();
     void chk();
@@ -59,7 +60,6 @@ public:
 };
 
 class Minotaur {
-    BulletList bullets;
     int dir, dirL, health, score;
     SDL_Texture *texture, *heart;
     Text scor;
@@ -68,15 +68,14 @@ class Minotaur {
 public:
     Minotaur(SDL_Renderer *);
     void display(SDL_Renderer *);
-    void shoot();
-    // void chk(BullfighterList);
+    void shoot(BulletList &);
+    void chk(BulletList &);
     void revive(int &);
     void move(Keyb, int);
     void changeHealth(bool);
     void changeDir(int);          //(Z==true) zdej
     void changeDirMove(int, int); //(Z==true) zdej
     void addScore(int i) { score += i; }
-    void setBulletsHead(Bullet *x) { x = bullets.head; }
     int getX() { return r.x; }
     int getY() { return r.y; }
     int getW() { return r.w; }
@@ -84,8 +83,6 @@ public:
     int getDir() { return dir; }
     int getScore() { return score; }
     int getHealth() { return health; }
-    SDL_Rect getR() { return r; }
-    BulletList getBullets() { return bullets; }
 };
 
 class Bullfighter {
@@ -105,7 +102,6 @@ public:
     int getFarmer() { return farmer; }
 };
 class BullfighterList {
-    BulletList bullets;
     Bullfighter *head;
     SDL_Texture *texture;
     SDL_Texture *farmer[3];
@@ -115,11 +111,9 @@ public:
     BullfighterList(SDL_Renderer *);
     void push(int, int);
     void display(SDL_Renderer *);
-    void attack(Bullfighter *);
-    void update();
-    void chk(Minotaur &);
-    void setBulletsHead(Bullet *x) { x = bullets.head; }
-    BulletList getBullets() { return bullets; }
+    void attack(BulletList &, Bullfighter *);
+    void update(BulletList &);
+    void chk(BulletList &, Minotaur &);
 };
 
 class Arena {
@@ -159,4 +153,4 @@ public:
 #include "Minotaur.cpp"
 #include "Screen.cpp"
 #include "Text.cpp"
-#include "enemy.cpp"
+#include "Enemy.cpp"

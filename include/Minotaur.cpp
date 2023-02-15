@@ -4,11 +4,9 @@ Minotaur::Minotaur(SDL_Renderer *rend) {
     r = {100, 100, 64, 64};
     h = {10, 10, 200, 40};
     s = {0, 0, 200, 40};
-    score = 0;
     texture = IMG_LoadTexture(rend, "media/mino.png");
     heart = IMG_LoadTexture(rend, "media/heart.png");
-    bullets.Btexture = IMG_LoadTexture(rend, "media/bullet.png");
-    bullets.head = nullptr;
+    score = 0;
 }
 void Minotaur::changeDir(int newD) {
     if (dir != newD)
@@ -43,7 +41,6 @@ void Minotaur::changeDirMove(int d, int speed) {
     }
 }
 void Minotaur::display(SDL_Renderer *rend) {
-    bullets.chk();
     SDL_RendererFlip flip = SDL_FLIP_NONE;
     if (dir == RIGHT)
         flip = SDL_FLIP_HORIZONTAL;
@@ -52,12 +49,11 @@ void Minotaur::display(SDL_Renderer *rend) {
             flip = SDL_FLIP_HORIZONTAL;
     SDL_Rect t = SDL_RectMy(r.x, r.y, r.w * SCALE, r.h * SCALE);
     SDL_RenderCopyEx(rend, texture, NULL, &t, NULL, NULL, flip);
-    bullets.display(rend);
     SDL_RenderCopy(rend, heart, &s, &h);
     scor.display(rend, score);
 }
-void Minotaur::shoot() {
-    bullets.push(r.x + 20, r.y + 20, dir);
+void Minotaur::shoot(BulletList &bullets) {
+    bullets.push(r.x + 20, r.y + 20, dir, 0);
 }
 void Minotaur::revive(int &menu) {
     menu = 0;
@@ -66,24 +62,10 @@ void Minotaur::revive(int &menu) {
     score = 0;
 }
 void Minotaur::move(Keyb b, int speed) {
-    bool x = 0;
-    if (b.get(SDL_SCANCODE_W) && b.get(SDL_SCANCODE_D)) {
-        changeDirMove(UPRIGHT, speed);
-        x = 1;
-    }
-    if (b.get(SDL_SCANCODE_W) && b.get(SDL_SCANCODE_A)) {
-        changeDirMove(UPLEFT, speed);
-        x = 1;
-    }
-    if (b.get(SDL_SCANCODE_S) && b.get(SDL_SCANCODE_D)) {
-        changeDirMove(DOWNRIGHT, speed);
-        x = 1;
-    }
-    if (b.get(SDL_SCANCODE_S) && b.get(SDL_SCANCODE_A)) {
-        changeDirMove(DOWNLEFT, speed);
-        x = 1;
-    }
-    if (x) return;
+    if (b.get(SDL_SCANCODE_W) && b.get(SDL_SCANCODE_D)) changeDirMove(UPRIGHT, speed);
+    if (b.get(SDL_SCANCODE_W) && b.get(SDL_SCANCODE_A)) changeDirMove(UPLEFT, speed);
+    if (b.get(SDL_SCANCODE_S) && b.get(SDL_SCANCODE_D)) changeDirMove(DOWNRIGHT, speed);
+    if (b.get(SDL_SCANCODE_S) && b.get(SDL_SCANCODE_A)) changeDirMove(DOWNLEFT, speed);
     if (b.get(SDL_SCANCODE_W)) changeDirMove(UP, speed);
     if (b.get(SDL_SCANCODE_S)) changeDirMove(DOWN, speed);
     if (b.get(SDL_SCANCODE_D)) changeDirMove(RIGHT, speed);
@@ -96,5 +78,21 @@ void Minotaur::changeHealth(bool down) {
     } else {
         health++;
         s.y -= 40;
+    }
+}
+void Minotaur::chk(BulletList &bullets) {
+    Bullet *tmp = bullets.head, *tmp_ = nullptr;
+    while (tmp != nullptr) {
+        if (tmp->r.y + tmp->r.h > r.y && tmp->r.y < r.y + r.h)
+            if (tmp->r.x + tmp->r.w > r.x && tmp->r.x < r.x + r.w)
+                if (tmp->getOrigin() == 1) { // TODO sprement bullet se spona direkt na njem
+                    tmp_ == nullptr ? bullets.head = tmp->next : tmp_->next = tmp->next;
+                    delete tmp;
+                    tmp_ == nullptr ? tmp = bullets.head : tmp = tmp_;
+                    changeHealth(1);
+                }
+        tmp_ = tmp;
+        if (tmp == nullptr) return;
+        tmp = tmp->next;
     }
 }
