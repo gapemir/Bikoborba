@@ -1,2 +1,2 @@
 # Bikoborba
-3. letnika naloga
+3. letnik naloga
